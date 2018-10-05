@@ -60,7 +60,9 @@ df %>% count(file_name, sheet_name)
 
 ```
 
-Files with extra columns are fine. Columns with the same name, but different data types are problematic. If the columns do vary, say by name, they can still be combined into a single data frame with some preprocessing. For example, if some column names are all caps and some lower, adding the same `read_sheets` function can be modified to adjust and standardize these differences
+Files with extra columns are fine. Columns with the same name, but different data types are problematic. 
+
+If the columns do vary, say by name, they can still be combined into a single data frame with some preprocessing. For example, if some column names are all caps and some lower, the same `read_sheets()` function can be modified to adjust and standardize these differences by adding `tolower()` in a `rename_all()` call:
 
 ```{r}
 read_sheets <- function(dir_path, file){
@@ -75,7 +77,7 @@ read_sheets <- function(dir_path, file){
 }
 ```
 
-Converting all column names to lowercase is a simple example, but the ideas is the same. If columns with the same data, but differing column names need to be combined, the column names can be standardized with some preprocessing. 
+Converting all column names to lowercase is a simple example, but the idea is stilkl the same. If columns with the same data, but differing column names need to be combined, the column names can be standardized with some preprocessing. 
 
 <!-- Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot. -->
 
