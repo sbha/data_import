@@ -1,0 +1,84 @@
+---
+title: "readxl and purrr"
+#author: "S. Barfield Harty"
+#date: "September 19, 2018"
+#https://rmarkdown.rstudio.com/authoring_basics.html
+output: html_document
+---
+
+Reading multiple `.xlsx` files with multiple sheets and combining them into a single data frame using the `tidyverse` and `readxl` packages.
+
+Load the packages:
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+Define a variable for the target directory where the `.xlsx` files are stored:
+```{r}
+dir_path <- "~/Desktop/test_dir/" 
+```
+
+Define a regular expression pattern to match the file name formats. In this example the file names start with `test`, followed by a single digit, and end with the `.xlsx` file extension:
+```{r}
+re_file <- "^test[0-9]\\.xlsx"    
+```
+This matches files like `test1.xlsx`.
+
+
+Define the function that will import the files and combine the various sheets into a data frame:
+```{r}
+read_sheets <- function(dir_path, file){
+  xlsx_file <- paste0(dir_path, file)
+  xlsx_file %>%
+    excel_sheets() %>%
+    set_names() %>%
+    map_df(read_excel, path = xlsx_file, .id = 'sheet_name') %>% 
+    mutate(file_name = file) %>% 
+    select(file_name, sheet_name, everything())
+}
+```
+The function takes two inputs; the directory path, which was defined earlier with the `dir_path` variable, and an individual file name, which will be identified using the `re_file` regular expression in a `list.files()` call later in the process. The function uses `readxl::excel_sheets()` to get each sheet name from the file, uses `purrr::map_df()` to import each sheet from the file with `readxl::read_excel()`, and sets the sheet name column with `.id = 'sheet_name'` arguement and the file name column with a `dplyr::mutate()` call. The output is a data frame containing the `file_name` and `sheet_name` columns set by the `readxl::read_sheets()` function, and all the other columns from the imported `.xlsx` files. 
+
+This function can combine multiple sheets from a file, but will only read a single `.xlsx` file at a time. In order to combine all the files in the directory, the `read_sheets()` function is mapped across all those files using: `purrr::map_df()`:
+
+```{r}
+df <- list.files(dir_path, re_file) %>% 
+  map_df(~read_sheets(dir_path, .))
+```
+This chain creates a new data frame `df` using `list.files()` to identify all the files that match the `re_file` regular expression in the `dir_path` directory. It then uses `purrr::map_df()` to apply the `read_sheets()` function to each file in the directory that matches the name format pattern and then combines them into a single data frame.  
+
+```{r}
+head(df)
+```
+
+This excerise assumes that the data is in an expected format; each file has the same column names and same column types. However, each `xlsx` file does not need to have the same number of sheets. In this example, file name `test1.xlsx` has two sheets, `test2.xlsx` has one, and `test3.xlsx` has two. 
+
+```{r}
+df %>% count(file_name, sheet_name)
+
+```
+
+Files with extra columns are fine. Columns with the same name, but different data types are problematic. 
+
+If the columns do vary, say by name, they can still be combined into a single data frame with some preprocessing. For example, if some column names are all caps and some lower, the same `read_sheets()` function can be modified to adjust and standardize these differences by adding `tolower()` in a `rename_all()` call:
+
+```{r}
+read_sheets <- function(dir_path, file){
+  xlsx_file <- paste0(dir_path, file)
+  xlsx_file %>%
+    excel_sheets() %>%
+    set_names() %>%
+    map_df(read_excel, path = xlsx_file, .id = 'sheet_name') %>% 
+    rename_all(~tolower(.)) %>% 
+    mutate(file_name = file) %>% 
+    select(file_name, sheet_name, everything())
+}
+```
+
+Converting all column names to lowercase is a simple example, but the idea is still the same. If columns with the same data, but differing column names need to be combined, the column names can be standardized with some preprocessing. 
+
+<!-- Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot. -->
+
+
+
