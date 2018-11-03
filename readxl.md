@@ -1,11 +1,3 @@
----
-title: "readxl and purrr"
-#author: "S. Barfield Harty"
-#date: "September 19, 2018"
-#https://rmarkdown.rstudio.com/authoring_basics.html
-output: html_document
----
-
 Reading multiple `.xlsx` files with multiple sheets and combining them into a single data frame using the `tidyverse` and `readxl` packages.
 
 Load the packages:
@@ -52,7 +44,7 @@ This chain creates a new data frame `df` using `list.files()` to identify all th
 head(df)
 ```
 
-This excerise assumes that the data is in an expected format; each file has the same column names and same column types. However, each `xlsx` file does not need to have the same number of sheets. In this example, file name `test1.xlsx` has two sheets, `test2.xlsx` has one, and `test3.xlsx` has two. 
+This excerise assumes that the data is in an expected format; each file has the same column names and same column types. However, each `xlsx` file does not need to have the same number of sheets. In this example, file name `test1.xlsx` has two sheets, `test2.xlsx` has one, and `test3.xlsx` has two: 
 
 ```{r}
 df %>% count(file_name, sheet_name)
@@ -61,7 +53,7 @@ df %>% count(file_name, sheet_name)
 
 Files with extra columns are fine. Columns with the same name, but different data types are problematic. 
 
-If the columns do vary, say by name, they can still be combined into a single data frame with some preprocessing. For example, if some column names are all caps and some lower, the same `read_sheets()` function can be modified to adjust and standardize these differences by adding `tolower()` in a `rename_all()` call:
+If the columns do vary, say by name only, they can still be combined into a single data frame with some preprocessing. For example, if some column names are all caps and some lower, the same `read_sheets()` function can be modified to adjust and standardize these differences by adding `tolower()` in a `rename_all()` call:
 
 ```{r}
 read_sheets <- function(dir_path, file){
